@@ -1,4 +1,5 @@
-namespace SecurIT_Memory;
+using SecurIT_Memory.Forms;
+
 
 /// <summary>
 /// Point d'entrée de l'application SecurIT Memory.

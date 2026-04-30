@@ -4,132 +4,100 @@ using SecurIT_Memory.Utils;
 namespace SecurIT_Memory.Forms
 {
     /// <summary>
-    /// Formulaire principal de jeu — affiche la grille Memory et gère la logique de jeu.
-    /// Contient le Timer de délai et le chronomètre de partie.
+    /// Formulaire principal de jeu — grille Memory plein écran, timers, Mode Contre-la-montre.
+    /// La taille des cartes est calculée dynamiquement à partir de la taille de l'écran.
     /// </summary>
     public class FormJeu : Form
     {
         // ────────────── Données du jeu ──────────────
         private JeuMemory _jeu = null!;
-        private int _tailleGrille;           // Ex: 4 pour une grille 4×4
-        private int _delaiRetournement;      // Délai (ms) avant retournement des non-paires
-        private string _difficulte;
+        private int  _tailleGrille;
+        private int  _delaiRetournement;
+        private bool _modeContreLaMontre;
+
+        // ────────────── Taille dynamique des cartes ──────────────
+        private int _carteTaille = 120;         // Calculé dans OnShown
+        private const int CARTE_MARGE = 10;
 
         // ────────────── Contrôles UI ──────────────
-        private Panel _panelGrille = null!;      // Contient les PictureBox des cartes
-        private Panel _panelInfo = null!;        // Barre d'info en haut
-        private Label _lblEssais = null!;
-        private Label _lblTimer = null!;
-        private Label _lblPaires = null!;
-        private Button _btnRestart = null!;
-        private Button _btnMenu = null!;
+        private Panel  _panelGrille = null!;
+        private Panel  _panelInfo   = null!;
+        private Label  _lblEssais   = null!;
+        private Label  _lblTimer    = null!;
+        private Label  _lblPaires   = null!;
+        private Button _btnRestart  = null!;
+        private Button _btnMenu     = null!;
 
         // ────────────── Images ──────────────
-        private Dictionary<string, Image> _images = new();  // Cache des images d'icônes
-        private Image _imageDos = null!;                    // Image du dos de carte
+        private Dictionary<string, Image> _images = new();
+        private Image _imageDos = null!;
 
         // ────────────── Timers ──────────────
-        private System.Windows.Forms.Timer _timerDelai = null!;    // Délai avant retournement
-        private System.Windows.Forms.Timer _timerChrono = null!;   // Chronomètre de partie
-        private int _secondes;                                      // Secondes écoulées
+        private System.Windows.Forms.Timer _timerDelai  = null!;
+        private System.Windows.Forms.Timer _timerChrono = null!;
+        private int _secondesChrono = 0; // Mode normal (croissant) ou CLM (décroissant)
 
-        // ────────────── Liaison carte ↔ PictureBox ──────────────
-        // Utilise CarteBase (classe mère) pour démontrer le polymorphisme par héritage
+        // ────────────── Liaison CarteBase ↔ PictureBox (polymorphisme héritage) ──────────────
         private Dictionary<PictureBox, CarteBase> _picboxVersCarte = new();
         private Dictionary<CarteBase, PictureBox> _carteVersPicbox = new();
 
-        // ────────────── Constantes visuelles ──────────────
-        private const int CARTE_TAILLE = 110;
-        private const int CARTE_MARGE = 8;
-
         // ────────────── Constructeur ──────────────
-        public FormJeu(int tailleGrille = 4, string difficulte = "Normal")
+        public FormJeu(int tailleGrille = 4, string difficulte = "Normal", bool modeContreLaMontre = false)
         {
-            _tailleGrille = tailleGrille;
-            _difficulte = difficulte;
-            _delaiRetournement = difficulte switch
+            _tailleGrille       = tailleGrille;
+            _modeContreLaMontre = modeContreLaMontre;
+            _delaiRetournement  = difficulte switch
             {
-                "Facile" => 2000,
+                "Facile"    => 2000,
                 "Difficile" => 800,
-                _ => 1500
+                _           => 1500
             };
 
-            InitialiserImages();
             InitialiserInterface();
-            NouvellePartie();
-        }
-
-        // ────────────── Initialisation des images ──────────────
-
-        /// <summary>Pré-génère toutes les images cybersécurité via IconeGenerateur.</summary>
-        private void InitialiserImages()
-        {
-            _imageDos = IconeGenerateur.GenererDos(CARTE_TAILLE);
-
-            foreach (var nom in JeuMemory.IconesCybersec)
-                _images[nom] = IconeGenerateur.GenererIcone(nom, CARTE_TAILLE);
+            // Les images et la grille sont créées dans OnShown,
+            // quand le panel a ses vraies dimensions.
         }
 
         // ────────────── Initialisation de l'interface ──────────────
-
         private void InitialiserInterface()
         {
-            int largeurGrille = _tailleGrille * (CARTE_TAILLE + CARTE_MARGE) + CARTE_MARGE;
-            int hauteurGrille = _tailleGrille * (CARTE_TAILLE + CARTE_MARGE) + CARTE_MARGE;
+            this.Text             = "SecurIT Memory — Le Défi Cybersécurité";
+            this.BackColor        = Color.FromArgb(8, 12, 28);
+            this.StartPosition    = FormStartPosition.CenterScreen;
+            this.WindowState      = FormWindowState.Maximized;   // Plein écran
+            this.FormBorderStyle  = FormBorderStyle.Sizable;
+            this.MinimumSize      = new Size(600, 500);
+            this.DoubleBuffered   = true;
 
-            this.Text = "SecurIT Memory — Le Défi Cybersécurité";
-            this.BackColor = Color.FromArgb(8, 12, 28);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
-            this.MinimumSize = new Size(largeurGrille + 20, hauteurGrille + 130);
-            this.ClientSize = new Size(largeurGrille + 20, hauteurGrille + 130);
-
-            // ── Barre d'informations supérieure ──
+            // ── Barre d'info supérieure ──
             _panelInfo = new Panel
             {
-                Dock = DockStyle.Top,
-                Height = 70,
-                BackColor = Color.FromArgb(12, 20, 45),
-                Padding = new Padding(10, 8, 10, 8)
+                Dock      = DockStyle.Top,
+                Height    = 72,
+                BackColor = Color.FromArgb(10, 18, 42),
+                Padding   = new Padding(10, 8, 10, 8)
             };
 
             _lblEssais = CreerLabelInfo("Essais : 0");
-            _lblTimer = CreerLabelInfo("⏱ 00:00");
+            _lblTimer  = CreerLabelInfo("⏱  00:00");
             _lblPaires = CreerLabelInfo("Paires : 0/0");
 
-            _btnRestart = new Button
+            if (_modeContreLaMontre)
             {
-                Text = "↺ Rejouer",
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(0, 100, 180),
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI", 9f, FontStyle.Bold),
-                Size = new Size(90, 36),
-                Cursor = Cursors.Hand
-            };
-            _btnRestart.FlatAppearance.BorderColor = Color.FromArgb(0, 150, 230);
-            _btnRestart.Click += (s, e) => NouvellePartie();
+                _lblTimer.ForeColor = Color.FromArgb(255, 180, 40); // Jaune-orange pour CLM
+            }
 
-            _btnMenu = new Button
-            {
-                Text = "🏠 Menu",
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(60, 20, 80),
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI", 9f, FontStyle.Bold),
-                Size = new Size(90, 36),
-                Cursor = Cursors.Hand
-            };
-            _btnMenu.FlatAppearance.BorderColor = Color.FromArgb(130, 50, 180);
-            _btnMenu.Click += (s, e) => { this.Close(); };
+            _btnRestart = CreerBoutonInfo("↺  Rejouer", Color.FromArgb(0, 90, 175));
+            _btnMenu    = CreerBoutonInfo("🏠  Menu",   Color.FromArgb(55, 15, 80));
+            _btnRestart.Click += (s, e) => NouvellePartie();
+            _btnMenu.Click    += (s, e) => this.Close();
 
             var flowInfo = new FlowLayoutPanel
             {
-                Dock = DockStyle.Fill,
+                Dock          = DockStyle.Fill,
                 FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false,
-                Padding = new Padding(5, 5, 5, 5)
+                WrapContents  = false,
+                Padding       = new Padding(8, 7, 8, 7)
             };
             flowInfo.Controls.Add(_lblEssais);
             flowInfo.Controls.Add(_lblTimer);
@@ -141,9 +109,8 @@ namespace SecurIT_Memory.Forms
             // ── Panel de la grille ──
             _panelGrille = new Panel
             {
-                Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(10, 15, 35),
-                AutoScroll = true
+                Dock      = DockStyle.Fill,
+                BackColor = Color.FromArgb(8, 12, 28)
             };
 
             this.Controls.Add(_panelGrille);
@@ -157,128 +124,138 @@ namespace SecurIT_Memory.Forms
             _timerChrono.Tick += TimerChrono_Tick;
         }
 
-        // ────────────── Nouvelle partie ──────────────
+        // ────────────── OnShown : calcul dynamique de la taille des cartes ──────────────
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            // À ce stade, le formulaire est maximisé → panel a ses vraies dimensions
+            _carteTaille = CalculerTailleCarte();
+            InitialiserImages();
+            NouvellePartie();
+        }
 
-        /// <summary>Démarre une nouvelle partie : réinitialise le jeu et reconstruit la grille.</summary>
+        /// <summary>
+        /// Calcule la taille optimale d'une carte en fonction de l'espace disponible.
+        /// </summary>
+        private int CalculerTailleCarte()
+        {
+            int panelW = _panelGrille.ClientSize.Width  - 20;
+            int panelH = _panelGrille.ClientSize.Height - 20;
+            int parLargeur = (panelW - (_tailleGrille + 1) * CARTE_MARGE) / _tailleGrille;
+            int parHauteur = (panelH - (_tailleGrille + 1) * CARTE_MARGE) / _tailleGrille;
+            return Math.Clamp(Math.Min(parLargeur, parHauteur), 80, 200);
+        }
+
+        /// <summary>Génère toutes les images cybersécurité à la taille calculée.</summary>
+        private void InitialiserImages()
+        {
+            _imageDos?.Dispose();
+            foreach (var img in _images.Values) img?.Dispose();
+            _images.Clear();
+
+            _imageDos = IconeGenerateur.GenererDos(_carteTaille);
+            foreach (var nom in JeuMemory.IconesCybersec)
+                _images[nom] = IconeGenerateur.GenererIcone(nom, _carteTaille);
+        }
+
+        // ────────────── Nouvelle partie ──────────────
         private void NouvellePartie()
         {
-            // Stopper les timers en cours
             _timerDelai.Stop();
             _timerChrono.Stop();
-            _secondes = 0;
+            
+            // Mode normal : on part de 0. Mode CLM : on part du max (60s pour 4x4, 180s pour 6x6)
+            if (_modeContreLaMontre)
+            {
+                _secondesChrono = _tailleGrille == 4 ? 60 : 180;
+                _lblTimer.ForeColor = Color.FromArgb(255, 180, 40);
+            }
+            else
+            {
+                _secondesChrono = 0;
+            }
 
-            // Recalculer le délai si la difficulté n'a pas changé
             _timerDelai.Interval = _delaiRetournement;
 
-            // Créer un nouveau jeu
             int nbPaires = (_tailleGrille * _tailleGrille) / 2;
             _jeu = new JeuMemory(nbPaires);
 
-            // Reconstruire la grille visuelle
             ConstruireGrille();
-
-            // Mettre à jour les labels
             MettreAJourLabels();
-
-            // Démarrer le chronomètre
+            _lblTimer.Text = _modeContreLaMontre ? $"⏳  {_secondesChrono / 60:D2}:{_secondesChrono % 60:D2}" : $"⏱  00:00";
+            
             _timerChrono.Start();
         }
 
-        /// <summary>Génère dynamiquement les PictureBox sur la grille WinForms.</summary>
+        /// <summary>Génère dynamiquement les PictureBox centrées sur la grille WinForms.</summary>
         private void ConstruireGrille()
         {
-            // Nettoyage des anciens contrôles
-            foreach (var pb in _picboxVersCarte.Keys)
-            {
-                pb.Click -= PictureBox_Click;
-                pb.Dispose();
-            }
+            // Nettoyage
+            foreach (var pb in _picboxVersCarte.Keys) { pb.Click -= PictureBox_Click; pb.Dispose(); }
             _picboxVersCarte.Clear();
             _carteVersPicbox.Clear();
             _panelGrille.Controls.Clear();
 
-            int nbCartes = _jeu.Cartes.Count;
+            // Centrage
+            int totalW = _tailleGrille * (_carteTaille + CARTE_MARGE) + CARTE_MARGE;
+            int totalH = _tailleGrille * (_carteTaille + CARTE_MARGE) + CARTE_MARGE;
+            int pw     = _panelGrille.ClientSize.Width;
+            int ph     = _panelGrille.ClientSize.Height;
+            int offsetX = Math.Max(12, (pw - totalW) / 2);
+            int offsetY = Math.Max(12, (ph - totalH) / 2);
 
-            // Calcul du centrage basé sur la taille réelle du formulaire
-            // (le panel a une taille de 0 avant la première affichage)
-            int totalW = _tailleGrille * (CARTE_TAILLE + CARTE_MARGE) + CARTE_MARGE;
-            int totalH = _tailleGrille * (CARTE_TAILLE + CARTE_MARGE) + CARTE_MARGE;
-            int panelW = this.ClientSize.Width;
-            int panelH = this.ClientSize.Height - 70; // -70 pour la barre d'info
-            int offsetX = Math.Max(10, (panelW - totalW) / 2);
-            int offsetY = Math.Max(10, (panelH - totalH) / 2);
-
-            for (int i = 0; i < nbCartes; i++)
+            for (int i = 0; i < _jeu.Cartes.Count; i++)
             {
-                int col = i % _tailleGrille;
-                int row = i / _tailleGrille;
-
+                int col   = i % _tailleGrille;
+                int row   = i / _tailleGrille;
                 var carte = _jeu.Cartes[i];
 
                 var pb = new PictureBox
                 {
-                    Size = new Size(CARTE_TAILLE, CARTE_TAILLE),
+                    Size     = new Size(_carteTaille, _carteTaille),
                     Location = new Point(
-                        offsetX + CARTE_MARGE + col * (CARTE_TAILLE + CARTE_MARGE),
-                        offsetY + CARTE_MARGE + row * (CARTE_TAILLE + CARTE_MARGE)),
-                    SizeMode = PictureBoxSizeMode.StretchImage,
-                    Image = _imageDos,
-                    Cursor = Cursors.Hand,
+                        offsetX + CARTE_MARGE + col * (_carteTaille + CARTE_MARGE),
+                        offsetY + CARTE_MARGE + row * (_carteTaille + CARTE_MARGE)),
+                    SizeMode    = PictureBoxSizeMode.StretchImage,
+                    Image       = _imageDos,
+                    Cursor      = Cursors.Hand,
                     BorderStyle = BorderStyle.None,
-                    BackColor = Color.Transparent
+                    BackColor   = Color.Transparent
                 };
 
-                // Effet de survol
-                pb.MouseEnter += (s, e) => { if (((PictureBox)s!).Cursor == Cursors.Hand) pb.BackColor = Color.FromArgb(20, 0, 212, 255); };
-                pb.MouseLeave += (s, e) => pb.BackColor = Color.Transparent;
+                pb.MouseEnter += (s, _) => { if (((PictureBox)s!).Cursor == Cursors.Hand) ((PictureBox)s).BackColor = Color.FromArgb(25, 0, 212, 255); };
+                pb.MouseLeave += (s, _) => ((PictureBox)s!).BackColor = Color.Transparent;
                 pb.Click += PictureBox_Click;
 
-                _picboxVersCarte[pb] = carte;
+                _picboxVersCarte[pb]    = carte;
                 _carteVersPicbox[carte] = pb;
                 _panelGrille.Controls.Add(pb);
             }
         }
 
         // ────────────── Logique de jeu ──────────────
-
-        /// <summary>
-        /// Gère le clic sur une PictureBox — cœur de la logique de retournement.
-        /// </summary>
         private void PictureBox_Click(object? sender, EventArgs e)
         {
             if (sender is not PictureBox pb) return;
             if (!_picboxVersCarte.TryGetValue(pb, out CarteBase? carteBase)) return;
-            // Cast vers Carte (sous-classe) pour accéder à NomIcone — démonstration du polymorphisme
+            // Polymorphisme : CarteBase → Carte (sous-classe cybersécurité)
             if (carteBase is not Carte carte) return;
 
-            // Tenter de révéler la carte via le gestionnaire de jeu
             if (!_jeu.TenterRevelerCarte(carte)) return;
-
-            // Mettre à jour visuellement la carte
             AfficherFaceCarte(pb, carte);
 
-            // Si 2 cartes sont retournées → vérifier la paire
             if (_jeu.NbCartesRetournees == 2)
             {
                 MettreAJourLabels();
                 bool paire = _jeu.VerifierPaire();
-
                 if (paire)
                 {
-                    // Paire trouvée : animation visuelle
                     AnimerPaireTrouvee(carte);
                     MettreAJourLabels();
-
-                    // Vérifier victoire
-                    if (_jeu.EstTermine)
-                    {
-                        _timerChrono.Stop();
-                        AfficherVictoire();
-                    }
+                    if (_jeu.EstTermine) { _timerChrono.Stop(); AfficherVictoire(); }
                 }
                 else
                 {
-                    // Pas une paire → bloquer les clics et lancer le timer de délai
                     _jeu.ClicsBloques = true;
                     _timerDelai.Start();
                 }
@@ -289,102 +266,133 @@ namespace SecurIT_Memory.Forms
             }
         }
 
-        /// <summary>Affiche la face avant (icône) ou le dos d'une carte.</summary>
         private void AfficherFaceCarte(PictureBox pb, CarteBase carte)
         {
-            if (carte.Etat == EtatCarte.Cachee)
-                pb.Image = _imageDos;
-            else
-                pb.Image = _images.TryGetValue(carte.NomIcone, out var img) ? img : _imageDos;
+            pb.Image = carte.Etat == EtatCarte.Cachee
+                ? _imageDos
+                : (_images.TryGetValue(carte.NomIcone, out var img) ? img : _imageDos);
         }
 
-        /// <summary>Animation légère pour une paire trouvée (bordure verte).</summary>
         private void AnimerPaireTrouvee(CarteBase carte)
         {
-            // On cherche les deux cartes de la même paire via leurs PictureBox
             foreach (var kvp in _carteVersPicbox)
-            {
                 if (kvp.Key.IdPaire == carte.IdPaire)
-                {
-                    kvp.Value.BackColor = Color.FromArgb(40, 0, 255, 100);
-                }
-            }
+                    kvp.Value.BackColor = Color.FromArgb(45, 0, 255, 100);
         }
 
-        // ────────────── Timers ──────────────
-
-        /// <summary>
-        /// Déclenché après le délai — retourne les cartes non-appariées face cachée.
-        /// </summary>
+        // ────────────── Timer délai retournement ──────────────
         private void TimerDelai_Tick(object? sender, EventArgs e)
         {
             _timerDelai.Stop();
             _jeu.RetournerCartesNonPairedees();
-
-            // Mettre à jour les visuels de toutes les cartes non-trouvées
             foreach (var kvp in _picboxVersCarte)
             {
-                var pb = kvp.Key;
-                var carte = kvp.Value;
-                if (!carte.EstTrouvee())
+                if (!kvp.Value.EstTrouvee())
                 {
-                    pb.Image = _imageDos;
-                    pb.BackColor = Color.Transparent;
+                    kvp.Key.Image    = _imageDos;
+                    kvp.Key.BackColor = Color.Transparent;
                 }
             }
         }
 
-        /// <summary>Met à jour le chronomètre chaque seconde.</summary>
+        // ────────────── Chronomètre ──────────────
         private void TimerChrono_Tick(object? sender, EventArgs e)
         {
-            _secondes++;
-            int min = _secondes / 60;
-            int sec = _secondes % 60;
-            _lblTimer.Text = $"⏱ {min:D2}:{sec:D2}";
+            if (_modeContreLaMontre)
+            {
+                _secondesChrono--;
+                _lblTimer.Text = $"⏳  {_secondesChrono / 60:D2}:{_secondesChrono % 60:D2}";
+
+                if (_secondesChrono <= 10)
+                {
+                    // Alerte quand il reste 10 secondes ou moins
+                    _lblTimer.ForeColor = (_secondesChrono % 2 == 0) ? Color.Red : Color.FromArgb(255, 180, 40);
+                }
+
+                if (_secondesChrono <= 0)
+                {
+                    _timerChrono.Stop();
+                    _jeu.ClicsBloques = true; // Bloquer les clics
+                    AfficherDefaite();
+                }
+            }
+            else
+            {
+                _secondesChrono++;
+                _lblTimer.Text = $"⏱  {_secondesChrono / 60:D2}:{_secondesChrono % 60:D2}";
+            }
         }
 
-        // ────────────── Affichage ──────────────
-
+        // ────────────── Labels et fins de jeu ──────────────
         private void MettreAJourLabels()
         {
             _lblEssais.Text = $"Essais : {_jeu.NbEssais}";
-            int totalPaires = (_tailleGrille * _tailleGrille) / 2;
-            _lblPaires.Text = $"Paires : {_jeu.NbPairesTrouvees}/{totalPaires}";
+            int total = (_tailleGrille * _tailleGrille) / 2;
+            _lblPaires.Text = $"Paires : {_jeu.NbPairesTrouvees}/{total}";
         }
 
-        /// <summary>Affiche la fenêtre de victoire avec le temps et le score.</summary>
         private void AfficherVictoire()
         {
-            int min = _secondes / 60;
-            int sec = _secondes % 60;
-
+            string mode = _modeContreLaMontre ? "  ⏳ Mode Contre-la-montre\n" : "";
             string msg =
                 $"🎉  FÉLICITATIONS !\n\n" +
+                $"{mode}\n" +
                 $"Toutes les paires ont été trouvées !\n\n" +
-                $"⏱  Temps : {min:D2}:{sec:D2}\n" +
-                $"🔢  Essais : {_jeu.NbEssais}\n\n" +
+                $"⏱  Temps    : {_secondesChrono / 60:D2}:{_secondesChrono % 60:D2}\n" +
+                $"🔢  Essais   : {_jeu.NbEssais}\n\n" +
                 $"Voulez-vous rejouer ?";
 
             var result = MessageBox.Show(msg, "SecurIT Memory — Victoire !",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Information);
 
-            if (result == DialogResult.Yes)
-                NouvellePartie();
-            else
-                this.Close();
+            if (result == DialogResult.Yes) NouvellePartie();
+            else this.Close();
         }
 
+        private void AfficherDefaite()
+        {
+            string msg =
+                $"💀  TEMPS ÉCOULÉ !\n\n" +
+                $"Vous n'avez pas réussi à trouver toutes les paires à temps.\n" +
+                $"Paires trouvées : {_jeu.NbPairesTrouvees} sur {(_tailleGrille * _tailleGrille) / 2}\n\n" +
+                $"Voulez-vous réessayer ?";
+
+            var result = MessageBox.Show(msg, "SecurIT Memory — Défaite",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+
+            if (result == DialogResult.Yes) NouvellePartie();
+            else this.Close();
+        }
+
+        // ────────────── Helpers ──────────────
         private static Label CreerLabelInfo(string texte) => new Label
         {
-            Text = texte,
+            Text      = texte,
             ForeColor = Color.FromArgb(0, 212, 255),
-            Font = new Font("Segoe UI", 11f, FontStyle.Bold),
-            AutoSize = false,
-            Width = 120,
-            Height = 40,
+            Font      = new Font("Segoe UI", 12f, FontStyle.Bold),
+            AutoSize  = false,
+            Width     = 155,
+            Height    = 44,
             TextAlign = ContentAlignment.MiddleCenter,
-            Margin = new Padding(5, 3, 5, 3)
+            Margin    = new Padding(6, 4, 6, 4)
         };
+
+        private static Button CreerBoutonInfo(string texte, Color couleur)
+        {
+            var btn = new Button
+            {
+                Text      = texte,
+                BackColor = couleur,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font      = new Font("Segoe UI", 10f, FontStyle.Bold),
+                Size      = new Size(120, 44),
+                Margin    = new Padding(6, 4, 6, 4),
+                Cursor    = Cursors.Hand
+            };
+            btn.FlatAppearance.BorderColor = Color.FromArgb(couleur.R / 2, couleur.G / 2, couleur.B / 2);
+            return btn;
+        }
 
         // ────────────── Nettoyage ──────────────
         protected override void OnFormClosed(FormClosedEventArgs e)
