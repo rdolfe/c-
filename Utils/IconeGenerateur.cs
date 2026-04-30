@@ -30,15 +30,26 @@ namespace SecurIT_Memory.Utils
         {
             return nomIcone switch
             {
-                "Virus"         => DessinerVirus(taille),
-                "Pare-feu"      => DessinerPareFeu(taille),
-                "Cadenas"       => DessinerCadenas(taille),
-                "Mot de passe"  => DessinerMotDePasse(taille),
-                "Bouclier"      => DessinerBouclier(taille),
-                "Hacker"        => DessinerHacker(taille),
-                "VPN"           => DessinerVPN(taille),
-                "Chiffrement"   => DessinerChiffrement(taille),
-                _               => DessinerInconnu(taille)
+                "Virus"            => DessinerVirus(taille),
+                "Pare-feu"         => DessinerPareFeu(taille),
+                "Cadenas"          => DessinerCadenas(taille),
+                "Mot de passe"     => DessinerMotDePasse(taille),
+                "Bouclier"         => DessinerBouclier(taille),
+                "Hacker"           => DessinerHacker(taille),
+                "VPN"              => DessinerVPN(taille),
+                "Chiffrement"      => DessinerChiffrement(taille),
+                // ── Icônes supplémentaires pour la grille 6×6 ──
+                "Phishing"         => DessinerPhishing(taille),
+                "Malware"          => DessinerMalware(taille),
+                "DDoS"             => DessinerDDoS(taille),
+                "Ransomware"       => DessinerRansomware(taille),
+                "Antivirus"        => DessinerAntivirus(taille),
+                "Certificat"       => DessinerCertificat(taille),
+                "Reseau"           => DessinerReseau(taille),
+                "Cloud"            => DessinerCloud(taille),
+                "Base de donnees"  => DessinerBaseDeDonnees(taille),
+                "Authentification" => DessinerAuthentification(taille),
+                _                  => DessinerInconnu(taille)
             };
         }
 
@@ -338,6 +349,256 @@ namespace SecurIT_Memory.Utils
             using var font = new Font("Segoe UI", t * 0.3f, FontStyle.Bold);
             using var brush = new SolidBrush(Color.Gray);
             g.DrawString("?", font, brush, t * 0.3f, t * 0.25f);
+            g.Dispose();
+            return bmp;
+        }
+
+        // =========================================================
+        // ── ICÔNES SUPPLÉMENTAIRES — GRILLE 6×6 ──
+        // =========================================================
+
+        // ── Icône Phishing ──
+        private static Bitmap DessinerPhishing(int t)
+        {
+            var (bmp, g) = CreerCanvas(t, 8 % Couleurs.Length);
+            var c = Color.FromArgb(255, 80, 80);
+            float cx = t / 2f;
+            // Hameçon
+            using var pen = new Pen(c, 4f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
+            g.DrawArc(pen, cx - t*0.18f, t*0.18f, t*0.36f, t*0.35f, 0, 270);
+            g.DrawLine(pen, cx + t*0.18f, t*0.35f, cx + t*0.18f, t*0.60f);
+            g.DrawArc(pen, cx + t*0.06f, t*0.52f, t*0.22f, t*0.18f, 0, -180);
+            // L’appât (ver)
+            using var brushVer = new SolidBrush(Color.FromArgb(200, c));
+            g.FillEllipse(brushVer, cx - t*0.08f, t*0.15f, t*0.16f, t*0.10f);
+            DessinerLabel(g, "PHISHING", c, t);
+            g.Dispose();
+            return bmp;
+        }
+
+        // ── Icône Malware ──
+        private static Bitmap DessinerMalware(int t)
+        {
+            var (bmp, g) = CreerCanvas(t, 9 % Couleurs.Length);
+            var c = Color.FromArgb(180, 50, 255);
+            float cx = t/2f, cy = t*0.42f;
+            // Tête de tête de mort
+            using var pen = new Pen(c, 3f);
+            using var brush = new SolidBrush(Color.FromArgb(60, c));
+            g.FillEllipse(brush, cx-t*0.22f, cy-t*0.25f, t*0.44f, t*0.38f);
+            g.DrawEllipse(pen, cx-t*0.22f, cy-t*0.25f, t*0.44f, t*0.38f);
+            // Yeux creux
+            g.FillEllipse(new SolidBrush(Color.FromArgb(200, 8,12,28)), cx-t*0.12f, cy-t*0.12f, t*0.10f, t*0.10f);
+            g.FillEllipse(new SolidBrush(Color.FromArgb(200, 8,12,28)), cx+t*0.02f, cy-t*0.12f, t*0.10f, t*0.10f);
+            // Bouche à crochets
+            g.DrawLine(pen, cx-t*0.12f, cy+t*0.08f, cx+t*0.12f, cy+t*0.08f);
+            g.DrawLine(pen, cx-t*0.08f, cy+t*0.08f, cx-t*0.08f, cy+t*0.16f);
+            g.DrawLine(pen, cx, cy+t*0.08f, cx, cy+t*0.16f);
+            g.DrawLine(pen, cx+t*0.08f, cy+t*0.08f, cx+t*0.08f, cy+t*0.16f);
+            DessinerLabel(g, "MALWARE", c, t);
+            g.Dispose();
+            return bmp;
+        }
+
+        // ── Icône DDoS ──
+        private static Bitmap DessinerDDoS(int t)
+        {
+            var (bmp, g) = CreerCanvas(t, 10 % Couleurs.Length);
+            var c = Color.FromArgb(255, 60, 0);
+            float cx = t/2f, cy = t*0.42f;
+            // Serveur cible
+            using var penC = new Pen(c, 3f);
+            using var brushC = new SolidBrush(Color.FromArgb(50, c));
+            g.FillRoundedRectangle(brushC, (int)(cx-t*0.12f), (int)(cy-t*0.10f), (int)(t*0.24f), (int)(t*0.20f), 4);
+            g.DrawRoundedRectangle(penC, (int)(cx-t*0.12f), (int)(cy-t*0.10f), (int)(t*0.24f), (int)(t*0.20f), 4);
+            // Flèches d'attaque entrantes
+            using var penF = new Pen(Color.FromArgb(200, c), 2f) { EndCap = LineCap.ArrowAnchor };
+            float[] angles = { 0, 45, 90, 135, 180, 225, 270, 315 };
+            foreach (var a in angles)
+            {
+                double rad = a * Math.PI / 180;
+                float x1 = cx + (float)(t*0.40f * Math.Cos(rad));
+                float y1 = cy + (float)(t*0.40f * Math.Sin(rad));
+                float x2 = cx + (float)(t*0.15f * Math.Cos(rad));
+                float y2 = cy + (float)(t*0.15f * Math.Sin(rad));
+                g.DrawLine(penF, x1, y1, x2, y2);
+            }
+            DessinerLabel(g, "DDOS", c, t);
+            g.Dispose();
+            return bmp;
+        }
+
+        // ── Icône Ransomware ──
+        private static Bitmap DessinerRansomware(int t)
+        {
+            var (bmp, g) = CreerCanvas(t, 11 % Couleurs.Length);
+            var c = Color.FromArgb(255, 180, 0);
+            float cx = t/2f, cy = t*0.38f;
+            // Dossier fermé
+            using var pen = new Pen(c, 3f);
+            using var brush = new SolidBrush(Color.FromArgb(40, c));
+            g.FillRoundedRectangle(brush, (int)(cx-t*0.25f),(int)(cy-t*0.05f),(int)(t*0.50f),(int)(t*0.28f),4);
+            g.DrawRoundedRectangle(pen, (int)(cx-t*0.25f),(int)(cy-t*0.05f),(int)(t*0.50f),(int)(t*0.28f),4);
+            // Cadenas dessus
+            using var penV = new Pen(c, 4f);
+            g.DrawArc(penV, cx-t*0.10f, cy-t*0.18f, t*0.20f, t*0.16f, 180, 180);
+            g.FillEllipse(new SolidBrush(c), cx-t*0.04f, cy+t*0.02f, t*0.08f, t*0.08f);
+            // "$" du ransom
+            using var fnt = new Font("Segoe UI", t*0.15f, FontStyle.Bold);
+            using var br = new SolidBrush(c);
+            var sz = g.MeasureString("$", fnt);
+            g.DrawString("$", fnt, br, cx-sz.Width/2, cy+t*0.08f);
+            DessinerLabel(g, "RANSOMWARE", c, t);
+            g.Dispose();
+            return bmp;
+        }
+
+        // ── Icône Antivirus ──
+        private static Bitmap DessinerAntivirus(int t)
+        {
+            var (bmp, g) = CreerCanvas(t, 12 % Couleurs.Length);
+            var c = Color.FromArgb(0, 230, 120);
+            float cx = t/2f, cy = t*0.42f;
+            // Bouclier vert
+            var pts = new PointF[]
+            {
+                new(cx, cy-t*0.26f), new(cx+t*0.20f,cy-t*0.14f),
+                new(cx+t*0.20f,cy+t*0.06f), new(cx,cy+t*0.24f),
+                new(cx-t*0.20f,cy+t*0.06f), new(cx-t*0.20f,cy-t*0.14f)
+            };
+            using var brushB = new SolidBrush(Color.FromArgb(50, c));
+            using var penB = new Pen(c, 3f);
+            g.FillPolygon(brushB, pts); g.DrawPolygon(penB, pts);
+            // Croix médicale
+            using var penCroix = new Pen(c, 5f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
+            g.DrawLine(penCroix, cx, cy-t*0.12f, cx, cy+t*0.12f);
+            g.DrawLine(penCroix, cx-t*0.10f, cy, cx+t*0.10f, cy);
+            DessinerLabel(g, "ANTIVIRUS", c, t);
+            g.Dispose();
+            return bmp;
+        }
+
+        // ── Icône Certificat ──
+        private static Bitmap DessinerCertificat(int t)
+        {
+            var (bmp, g) = CreerCanvas(t, 13 % Couleurs.Length);
+            var c = Color.FromArgb(0, 190, 255);
+            float cx = t/2f;
+            // Parchemin
+            using var pen = new Pen(c, 2f);
+            using var brush = new SolidBrush(Color.FromArgb(30, c));
+            g.FillRoundedRectangle(brush, (int)(cx-t*0.28f),(int)(t*0.15f),(int)(t*0.56f),(int)(t*0.55f),6);
+            g.DrawRoundedRectangle(pen, (int)(cx-t*0.28f),(int)(t*0.15f),(int)(t*0.56f),(int)(t*0.55f),6);
+            // Lignes de texte
+            for(int i=0;i<3;i++)
+                g.DrawLine(pen, cx-t*0.18f, t*(0.27f+i*0.10f), cx+t*0.18f, t*(0.27f+i*0.10f));
+            // Médaille
+            using var brushM = new SolidBrush(Color.FromArgb(80, c));
+            g.FillEllipse(brushM, cx-t*0.10f, t*0.60f, t*0.20f, t*0.20f);
+            g.DrawEllipse(pen, cx-t*0.10f, t*0.60f, t*0.20f, t*0.20f);
+            using var fnt = new Font("Segoe UI", t*0.08f, FontStyle.Bold);
+            var sz = g.MeasureString("SSL", fnt);
+            g.DrawString("SSL", fnt, new SolidBrush(c), cx-sz.Width/2, t*0.645f);
+            DessinerLabel(g, "CERTIFICAT", c, t);
+            g.Dispose();
+            return bmp;
+        }
+
+        // ── Icône Réseau ──
+        private static Bitmap DessinerReseau(int t)
+        {
+            var (bmp, g) = CreerCanvas(t, 14 % Couleurs.Length);
+            var c = Color.FromArgb(80, 200, 255);
+            float cx = t/2f, cy = t*0.42f;
+            // Noeuds du réseau
+            PointF[] noeuds = {
+                new(cx, cy-t*0.22f), new(cx+t*0.22f, cy),
+                new(cx, cy+t*0.22f), new(cx-t*0.22f, cy), new(cx, cy)
+            };
+            using var pen = new Pen(Color.FromArgb(120, c), 2f);
+            // Connexions
+            foreach(var n in noeuds)
+                g.DrawLine(pen, cx, cy, n.X, n.Y);
+            // Cercles
+            using var brushN = new SolidBrush(c);
+            foreach(var n in noeuds)
+                g.FillEllipse(brushN, n.X-7, n.Y-7, 14, 14);
+            DessinerLabel(g, "RESEAU", c, t);
+            g.Dispose();
+            return bmp;
+        }
+
+        // ── Icône Cloud ──
+        private static Bitmap DessinerCloud(int t)
+        {
+            var (bmp, g) = CreerCanvas(t, 15 % Couleurs.Length);
+            var c = Color.FromArgb(120, 180, 255);
+            float cx = t/2f, cy = t*0.40f;
+            // Nuage
+            using var brush = new SolidBrush(Color.FromArgb(80, c));
+            using var pen = new Pen(c, 3f);
+            g.FillEllipse(brush, cx-t*0.22f, cy-t*0.10f, t*0.24f, t*0.22f);
+            g.FillEllipse(brush, cx-t*0.06f, cy-t*0.18f, t*0.28f, t*0.26f);
+            g.FillEllipse(brush, cx+t*0.08f, cy-t*0.08f, t*0.18f, t*0.18f);
+            g.FillRectangle(brush, cx-t*0.22f, cy+t*0.02f, t*0.44f, t*0.10f);
+            g.DrawEllipse(pen, cx-t*0.22f, cy-t*0.10f, t*0.24f, t*0.22f);
+            g.DrawEllipse(pen, cx-t*0.06f, cy-t*0.18f, t*0.28f, t*0.26f);
+            g.DrawEllipse(pen, cx+t*0.08f, cy-t*0.08f, t*0.18f, t*0.18f);
+            // Flèche de téléchargement
+            using var penF = new Pen(c, 3f);
+            g.DrawLine(penF, cx, cy+t*0.12f, cx, cy+t*0.30f);
+            g.DrawLine(penF, cx-t*0.08f, cy+t*0.22f, cx, cy+t*0.30f);
+            g.DrawLine(penF, cx+t*0.08f, cy+t*0.22f, cx, cy+t*0.30f);
+            DessinerLabel(g, "CLOUD", c, t);
+            g.Dispose();
+            return bmp;
+        }
+
+        // ── Icône Base de Données ──
+        private static Bitmap DessinerBaseDeDonnees(int t)
+        {
+            var (bmp, g) = CreerCanvas(t, 16 % Couleurs.Length);
+            var c = Color.FromArgb(255, 160, 50);
+            float cx = t/2f;
+            // Cylindres (disques)
+            float ew = t*0.40f, eh = t*0.10f, ex = cx-t*0.20f;
+            float[] ys = { t*0.20f, t*0.34f, t*0.48f };
+            using var brush = new SolidBrush(Color.FromArgb(50, c));
+            using var pen = new Pen(c, 2f);
+            foreach(var y in ys)
+            {
+                g.FillEllipse(brush, ex, y, ew, eh);
+                g.DrawEllipse(pen, ex, y, ew, eh);
+                g.FillRectangle(brush, ex, y+eh/2, ew, t*0.10f);
+                g.DrawLine(pen, ex, y+eh/2, ex, y+eh/2+t*0.10f);
+                g.DrawLine(pen, ex+ew, y+eh/2, ex+ew, y+eh/2+t*0.10f);
+            }
+            DessinerLabel(g, "DATABASE", c, t);
+            g.Dispose();
+            return bmp;
+        }
+
+        // ── Icône Authentification ──
+        private static Bitmap DessinerAuthentification(int t)
+        {
+            var (bmp, g) = CreerCanvas(t, 17 % Couleurs.Length);
+            var c = Color.FromArgb(0, 255, 200);
+            float cx = t/2f, cy = t*0.35f;
+            // Silhouette utilisateur
+            using var brush = new SolidBrush(Color.FromArgb(60, c));
+            using var pen = new Pen(c, 3f);
+            g.FillEllipse(brush, cx-t*0.12f, cy-t*0.22f, t*0.24f, t*0.20f);
+            g.DrawEllipse(pen, cx-t*0.12f, cy-t*0.22f, t*0.24f, t*0.20f);
+            g.FillEllipse(brush, cx-t*0.20f, cy, t*0.40f, t*0.22f);
+            g.DrawEllipse(pen, cx-t*0.20f, cy, t*0.40f, t*0.22f);
+            // Coche verte de validation
+            using var penCheck = new Pen(c, 4f){StartCap=LineCap.Round,EndCap=LineCap.Round,LineJoin=LineJoin.Round};
+            g.DrawLines(penCheck, new PointF[]{
+                new(cx+t*0.02f, cy+t*0.30f),
+                new(cx+t*0.10f, cy+t*0.40f),
+                new(cx+t*0.22f, cy+t*0.22f)
+            });
+            DessinerLabel(g, "AUTH", c, t);
             g.Dispose();
             return bmp;
         }

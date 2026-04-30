@@ -34,8 +34,9 @@ namespace SecurIT_Memory.Forms
         private int _secondes;                                      // Secondes écoulées
 
         // ────────────── Liaison carte ↔ PictureBox ──────────────
-        private Dictionary<PictureBox, Carte> _picboxVersCarte = new();
-        private Dictionary<Carte, PictureBox> _carteVersPicbox = new();
+        // Utilise CarteBase (classe mère) pour démontrer le polymorphisme par héritage
+        private Dictionary<PictureBox, CarteBase> _picboxVersCarte = new();
+        private Dictionary<CarteBase, PictureBox> _carteVersPicbox = new();
 
         // ────────────── Constantes visuelles ──────────────
         private const int CARTE_TAILLE = 110;
@@ -198,11 +199,14 @@ namespace SecurIT_Memory.Forms
 
             int nbCartes = _jeu.Cartes.Count;
 
-            // Calcul du centrage
+            // Calcul du centrage basé sur la taille réelle du formulaire
+            // (le panel a une taille de 0 avant la première affichage)
             int totalW = _tailleGrille * (CARTE_TAILLE + CARTE_MARGE) + CARTE_MARGE;
             int totalH = _tailleGrille * (CARTE_TAILLE + CARTE_MARGE) + CARTE_MARGE;
-            int offsetX = Math.Max(0, (_panelGrille.Width - totalW) / 2);
-            int offsetY = Math.Max(0, (_panelGrille.Height - totalH) / 2);
+            int panelW = this.ClientSize.Width;
+            int panelH = this.ClientSize.Height - 70; // -70 pour la barre d'info
+            int offsetX = Math.Max(10, (panelW - totalW) / 2);
+            int offsetY = Math.Max(10, (panelH - totalH) / 2);
 
             for (int i = 0; i < nbCartes; i++)
             {
@@ -243,7 +247,9 @@ namespace SecurIT_Memory.Forms
         private void PictureBox_Click(object? sender, EventArgs e)
         {
             if (sender is not PictureBox pb) return;
-            if (!_picboxVersCarte.TryGetValue(pb, out Carte? carte)) return;
+            if (!_picboxVersCarte.TryGetValue(pb, out CarteBase? carteBase)) return;
+            // Cast vers Carte (sous-classe) pour accéder à NomIcone — démonstration du polymorphisme
+            if (carteBase is not Carte carte) return;
 
             // Tenter de révéler la carte via le gestionnaire de jeu
             if (!_jeu.TenterRevelerCarte(carte)) return;
@@ -284,7 +290,7 @@ namespace SecurIT_Memory.Forms
         }
 
         /// <summary>Affiche la face avant (icône) ou le dos d'une carte.</summary>
-        private void AfficherFaceCarte(PictureBox pb, Carte carte)
+        private void AfficherFaceCarte(PictureBox pb, CarteBase carte)
         {
             if (carte.Etat == EtatCarte.Cachee)
                 pb.Image = _imageDos;
@@ -293,9 +299,9 @@ namespace SecurIT_Memory.Forms
         }
 
         /// <summary>Animation légère pour une paire trouvée (bordure verte).</summary>
-        private void AnimerPaireTrouvee(Carte carte)
+        private void AnimerPaireTrouvee(CarteBase carte)
         {
-            // On cherche les deux cartes de la même paire
+            // On cherche les deux cartes de la même paire via leurs PictureBox
             foreach (var kvp in _carteVersPicbox)
             {
                 if (kvp.Key.IdPaire == carte.IdPaire)

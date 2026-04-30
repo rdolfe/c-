@@ -20,9 +20,13 @@ namespace SecurIT_Memory.Models
         private Random _random;
 
         // ────────────── Noms des icônes cybersécurité ──────────────
-        /// <summary>Thème Cybersécurité — icônes disponibles.</summary>
+        /// <summary>
+        /// Thème Cybersécurité — 18 icônes disponibles.
+        /// 8 pour la grille 4×4 (8 paires) et 18 pour la grille 6×6 (18 paires).
+        /// </summary>
         public static readonly string[] IconesCybersec = new[]
         {
+            // ── 8 icônes de base (grille 4×4) ──
             "Virus",
             "Pare-feu",
             "Cadenas",
@@ -30,7 +34,18 @@ namespace SecurIT_Memory.Models
             "Bouclier",
             "Hacker",
             "VPN",
-            "Chiffrement"
+            "Chiffrement",
+            // ── 10 icônes supplémentaires (grille 6×6) ──
+            "Phishing",
+            "Malware",
+            "DDoS",
+            "Ransomware",
+            "Antivirus",
+            "Certificat",
+            "Reseau",
+            "Cloud",
+            "Base de donnees",
+            "Authentification"
         };
 
         // ────────────── Propriétés publiques ──────────────
@@ -78,15 +93,18 @@ namespace SecurIT_Memory.Models
 
         /// <summary>
         /// Crée les paires de cartes avec les icônes cybersécurité.
+        /// Utilise exactement <paramref name="nbPaires"/> icônes distinctes.
         /// </summary>
         private void InitialiserCartes(int nbPaires)
         {
-            // S'assure de ne pas dépasser le nombre d'icônes disponibles
-            int nbIcones = Math.Min(nbPaires, IconesCybersec.Length);
+            // Vérification de sécurité : on ne peut pas avoir plus de paires que d'icônes
+            if (nbPaires > IconesCybersec.Length)
+                throw new ArgumentOutOfRangeException(nameof(nbPaires),
+                    $"Impossible de créer {nbPaires} paires : seulement {IconesCybersec.Length} icônes disponibles.");
 
-            for (int i = 0; i < nbIcones; i++)
+            for (int i = 0; i < nbPaires; i++)
             {
-                string nomIcone = IconesCybersec[i % IconesCybersec.Length];
+                string nomIcone = IconesCybersec[i];
                 // Crée deux cartes identiques (une paire)
                 _cartes.Add(new Carte(i, nomIcone));
                 _cartes.Add(new Carte(i, nomIcone));
