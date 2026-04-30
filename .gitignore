@@ -1,0 +1,14 @@
+## Dossiers de build
+bin/
+obj/
+
+## Fichiers Visual Studio
+*.user
+.vs/
+*.suo
+*.userprefs
+
+## Fichiers temporaires
+*.tmp
+*.cache
+Thumbs.db
