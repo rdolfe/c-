@@ -2,7 +2,7 @@ using SecurIT_Memory.Models;
 
 namespace SecurIT_Memory.Forms
 {
-    /// <summary>
+    / // <summary>
     /// Formulaire Options — grille, difficulté et Mode Contre-la-montre.
     /// </summary>
     public class FormOptions : Form
