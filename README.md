@@ -1,4 +1,4 @@
-# 🛡️ SecurIT Memory — Jeu de Cartes Cybersécurité
+#  SecurIT Memory — Jeu de Cartes Cybersécurité
 
 > **Projet WinForms C# · Salon de l'Innovation Tech · SecurIT**
 
@@ -6,7 +6,7 @@ Un jeu de Memory interactif mettant en scène 8 icônes de cybersécurité, dév
 
 ---
 
-## 📸 Aperçu
+##  Aperçu
 
 | Menu Principal | Jeu (4×4) | Options |
 |:-:|:-:|:-:|
@@ -14,9 +14,9 @@ Un jeu de Memory interactif mettant en scène 8 icônes de cybersécurité, dév
 
 ---
 
-## 🎮 Fonctionnalités
+##  Fonctionnalités
 
-### ✅ Fonctionnalités de base
+###  Fonctionnalités de base
 - **Menu principal** avec 3 boutons : Jouer, Options, Quitter
 - **Grille dynamique** 4×4 (8 paires) ou 6×6 (18 paires)
 - **Mélange aléatoire** des cartes à chaque partie (algorithme Fisher-Yates)
@@ -28,28 +28,28 @@ Un jeu de Memory interactif mettant en scène 8 icônes de cybersécurité, dév
 - **Détection de victoire** avec affichage du temps et des essais
 - **Rejouer** sans relancer l'application
 
-### 🎨 Interface
+###  Interface
 - Design **cyberpunk sombre** avec palette cyan/violet
 - Icônes cybersécurité **générées en code** (GDI+, pas d'images externes)
 - Animation de **pulse** sur le logo du menu
 - **Dos de carte** avec circuit imprimé et logo SecurIT
 - Effets de survol sur les cartes
 
-### 🔒 Icônes Cybersécurité
+### Icônes Cybersécurité
 | Icône | Description |
 |-------|-------------|
-| 🦠 Virus | Créature avec pointes et yeux |
-| 🔥 Pare-feu | Mur de briques + flammes |
-| 🔒 Cadenas | Arc + corps + trou de serrure |
-| 🔑 Mot de passe | Astérisques + barre de saisie |
-| 🛡️ Bouclier | Hexagone + coche de validation |
-| 💻 Hacker | Terminal avec lignes de code |
-| 🌐 VPN | Globe terrestre + tunnel |
-| 🔐 Chiffrement | Clé + flux de bits |
+|  Virus | Créature avec pointes et yeux |
+|  Pare-feu | Mur de briques + flammes |
+|  Cadenas | Arc + corps + trou de serrure |
+|  Mot de passe | Astérisques + barre de saisie |
+|  Bouclier | Hexagone + coche de validation |
+|  Hacker | Terminal avec lignes de code |
+|  VPN | Globe terrestre + tunnel |
+|  Chiffrement | Clé + flux de bits |
 
 ---
 
-## 🏗️ Architecture du Projet
+##  Architecture du Projet
 
 ```
 SecurIT_Memory/
@@ -82,7 +82,7 @@ SecurIT_Memory/
 
 ---
 
-## 🧱 Conception Orientée Objet
+##  Conception Orientée Objet
 
 ### Classe `Carte`
 ```csharp
@@ -151,13 +151,13 @@ dotnet run
 2. **(Optionnel)** Cliquer sur **Options** pour choisir la grille (4×4 ou 6×6) et la difficulté
 3. Cliquer sur **Jouer** pour démarrer une partie
 4. **Cliquer sur deux cartes** pour les retourner
-   - Si elles correspondent → elles restent visibles (paire trouvée ✅)
+   - Si elles correspondent → elles restent visibles (paire trouvée )
    - Sinon → elles se retournent après le délai ⏱
 5. Trouver toutes les paires pour **gagner** !
 
 ---
 
-## 👥 Équipe
+##  Équipe
 
 | Membre | Rôle |
 |--------|------|
@@ -180,7 +180,7 @@ dotnet run
 
 ---
 
-## 📜 Technologies
+##  Technologies
 
 - **C#** .NET 10
 - **WinForms** (System.Windows.Forms)
